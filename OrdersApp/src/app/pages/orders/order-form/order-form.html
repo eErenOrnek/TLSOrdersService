@@ -1,0 +1,183 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ orderId ? '✏️ Sipariş Düzenle' : '➕ Yeni Sipariş' }}</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else {
+    <div class="card">
+      @if (error()) {
+        <div style="padding: 12px; background: #f8d7da; color: #721c24; border-radius: 6px; margin-bottom: 20px;">
+          {{ error() }}
+        </div>
+      }
+
+      <form (submit)="save($event)">
+        <div class="form-group">
+          <label>Müşteri *</label>
+          <select 
+            class="form-control"
+            [value]="customerId()"
+            (change)="customerId.set(parseInt($any($event.target).value))"
+            required
+          >
+            <option value="0">Müşteri seçin</option>
+            @for (customer of customers(); track customer.customerId) {
+              <option [value]="customer.customerId">{{ customer.customerName }}</option>
+            }
+          </select>
+        </div>
+
+        @if (customerId() > 0 && customerAddresses().length > 0) {
+          <div class="form-group">
+            <label>Teslimat Adresi *</label>
+            <select 
+              class="form-control"
+              [value]="deliveryAddressId()"
+              (change)="deliveryAddressId.set(parseInt($any($event.target).value))"
+              required
+            >
+              <option value="0">Adres seçin</option>
+              @for (address of customerAddresses(); track address.addressId) {
+                <option [value]="address.addressId">
+                  {{ address.address }} - {{ address.city }} / {{ address.country }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Fatura Adresi *</label>
+            <select 
+              class="form-control"
+              [value]="invoiceAddressId()"
+              (change)="invoiceAddressId.set(parseInt($any($event.target).value))"
+              required
+            >
+              <option value="0">Adres seçin</option>
+              @for (address of customerAddresses(); track address.addressId) {
+                <option [value]="address.addressId">
+                  {{ address.address }} - {{ address.city }} / {{ address.country }}
+                </option>
+              }
+            </select>
+          </div>
+        } @else if (customerId() > 0 && customerAddresses().length === 0) {
+          <div style="padding: 12px; background: #fff3cd; color: #856404; border-radius: 6px; margin-bottom: 16px;">
+            ⚠️ Bu müşterinin kayıtlı adresi bulunmamaktadır.
+          </div>
+        }
+
+        <div class="form-group">
+          <label>Sipariş No *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [value]="orderNo()"
+            (input)="orderNo.set($any($event.target).value)"
+            placeholder="Sipariş numarası girin"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Toplam Tutar *</label>
+          <input 
+            type="number" 
+            step="0.01"
+            class="form-control" 
+            [value]="totalPrice()"
+            (input)="totalPrice.set(parseFloat($any($event.target).value) || 0)"
+            placeholder="0.00"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Vergi</label>
+          <input 
+            type="number" 
+            step="0.01"
+            class="form-control" 
+            [value]="tax()"
+            (input)="tax.set(parseFloat($any($event.target).value) || 0)"
+            placeholder="0.00"
+          />
+        </div>
+
+        <!-- Sipariş Detayları -->
+        <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0;">📋 Sipariş Detayları</h3>
+            <button type="button" class="btn btn-primary" (click)="addOrderDetail()">
+              ➕ Ürün Ekle
+            </button>
+          </div>
+
+          @if (orderDetails().length === 0) {
+            <p class="empty-hint">Henüz ürün eklenmedi. "Ürün Ekle" butonuna tıklayarak ürün ekleyebilirsiniz.</p>
+          } @else {
+            @for (detail of orderDetails(); track $index) {
+              <div style="display: grid; grid-template-columns: 1fr 150px 60px; gap: 12px; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <select 
+                    class="form-control"
+                    [value]="detail.stockId"
+                    (change)="updateOrderDetail($index, 'stockId', parseInt($any($event.target).value))"
+                  >
+                    <option value="0">Ürün seçin</option>
+                    @for (stock of stocks(); track stock.stockId) {
+                      <option [value]="stock.stockId">{{ stock.stockName }} ({{ stock.price | number:'1.2-2' }} ₺)</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <input 
+                    type="number" 
+                    class="form-control"
+                    [value]="detail.amount"
+                    (input)="updateOrderDetail($index, 'amount', parseInt($any($event.target).value) || 1)"
+                    placeholder="Miktar"
+                    min="1"
+                  />
+                </div>
+                <button 
+                  type="button" 
+                  class="btn btn-danger" 
+                  (click)="removeOrderDetail($index)"
+                  style="height: 42px;"
+                >
+                  🗑️
+                </button>
+              </div>
+            }
+          }
+        </div>
+
+        <div class="form-group" style="margin-top: 24px;">
+          <label>
+            <input 
+              type="checkbox" 
+              [checked]="isActive()"
+              (change)="isActive.set($any($event.target).checked)"
+              style="margin-right: 8px;"
+            />
+            Aktif
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" [disabled]="loading()">
+            💾 Kaydet
+          </button>
+          <button type="button" class="btn btn-secondary" routerLink="/orders">
+            ❌ İptal
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

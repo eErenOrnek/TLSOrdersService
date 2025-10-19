@@ -1,0 +1,93 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>🏠 Müşteri Adresleri</h1>
+    <button class="btn btn-primary" routerLink="/customer-addresses/new">
+      ➕ Yeni Adres
+    </button>
+  </div>
+
+  <!-- Müşteri Filtresi -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <label style="font-weight: 600; min-width: 120px;">Müşteri Filtresi:</label>
+      <select 
+        class="form-control" 
+        style="max-width: 400px;"
+        [value]="selectedCustomerId()"
+        (change)="selectedCustomerId.set(parseInt($any($event.target).value)); filterByCustomer()"
+      >
+        <option value="0">Tüm Müşteriler</option>
+        @for (customer of customers(); track customer.customerId) {
+          <option [value]="customer.customerId">{{ customer.customerName }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else if (error()) {
+    <div class="card">
+      <div class="empty-state" style="color: #dc3545;">{{ error() }}</div>
+      <div style="text-align: center; margin-top: 16px;">
+        <button (click)="loadAllAddresses()" class="btn btn-primary">🔄 Tekrar Dene</button>
+      </div>
+    </div>
+  } @else if (addresses().length === 0) {
+    <div class="card">
+      <p class="empty-state">Henüz adres kaydı bulunmamaktadır.</p>
+      <p class="empty-hint">Yeni adres eklemek için yukarıdaki "Yeni Adres" butonuna tıklayın.</p>
+    </div>
+  } @else {
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Müşteri</th>
+            <th>Adres Tipi</th>
+            <th>Adres</th>
+            <th>Şehir / Ülke</th>
+            <th>Telefon</th>
+            <th>E-posta</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (address of addresses(); track address.addressId) {
+            <tr>
+              <td>{{ address.addressId }}</td>
+              <td>{{ getCustomerName(address.customerId) }}</td>
+              <td>
+                <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.85em; background: #e3f2fd; color: #1976d2;">
+                  {{ address.addressType }}
+                </span>
+              </td>
+              <td style="max-width: 250px;">
+                <div style="font-size: 0.9em;">
+                  {{ address.address }}<br>
+                  <span style="color: #666;">{{ address.town }}</span>
+                </div>
+              </td>
+              <td>{{ address.city }} / {{ address.country }}</td>
+              <td>{{ address.phone }}</td>
+              <td>{{ address.email }}</td>
+              <td>
+                <span [style.color]="address.isActive ? '#28a745' : '#6c757d'">
+                  {{ address.isActive ? '✓ Aktif' : '✗ Pasif' }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/customer-addresses/edit', address.addressId]" class="btn btn-primary" style="margin-right: 8px;">✏️ Düzenle</a>
+                <button (click)="deleteAddress(address.addressId)" class="btn btn-danger">🗑️ Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

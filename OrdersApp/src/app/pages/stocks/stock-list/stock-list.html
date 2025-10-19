@@ -1,0 +1,62 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>📦 Stoklar</h1>
+    <button class="btn btn-primary" routerLink="/stocks/new">
+      ➕ Yeni Stok
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else if (error()) {
+    <div class="card">
+      <div class="empty-state" style="color: #dc3545;">{{ error() }}</div>
+      <div style="text-align: center; margin-top: 16px;">
+        <button (click)="loadStocks()" class="btn btn-primary">🔄 Tekrar Dene</button>
+      </div>
+    </div>
+  } @else if (stocks().length === 0) {
+    <div class="card">
+      <p class="empty-state">Henüz stok kaydı bulunmamaktadır.</p>
+      <p class="empty-hint">Yeni stok eklemek için yukarıdaki "Yeni Stok" butonuna tıklayın.</p>
+    </div>
+  } @else {
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Stok Adı</th>
+            <th>Birim</th>
+            <th>Fiyat</th>
+            <th>Barkod</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (stock of stocks(); track stock.stockId) {
+            <tr>
+              <td>{{ stock.stockId }}</td>
+              <td>{{ stock.stockName }}</td>
+              <td>{{ stock.unit }}</td>
+              <td>{{ stock.price | number:'1.2-2' }} ₺</td>
+              <td>{{ stock.barcode }}</td>
+              <td>
+                <span [style.color]="stock.isActive ? '#28a745' : '#6c757d'">
+                  {{ stock.isActive ? '✓ Aktif' : '✗ Pasif' }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/stocks/edit', stock.stockId]" class="btn btn-primary" style="margin-right: 8px;">✏️ Düzenle</a>
+                <button (click)="deleteStock(stock.stockId)" class="btn btn-danger">🗑️ Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

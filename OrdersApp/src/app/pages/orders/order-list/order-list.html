@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>🛒 Siparişler</h1>
+    <button class="btn btn-primary" routerLink="/orders/new">
+      ➕ Yeni Sipariş
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else if (error()) {
+    <div class="card">
+      <div class="empty-state" style="color: #dc3545;">{{ error() }}</div>
+      <div style="text-align: center; margin-top: 16px;">
+        <button (click)="loadOrders()" class="btn btn-primary">🔄 Tekrar Dene</button>
+      </div>
+    </div>
+  } @else if (orders().length === 0) {
+    <div class="card">
+      <p class="empty-state">Henüz sipariş kaydı bulunmamaktadır.</p>
+      <p class="empty-hint">Yeni sipariş oluşturmak için yukarıdaki "Yeni Sipariş" butonuna tıklayın.</p>
+    </div>
+  } @else {
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Sipariş No</th>
+            <th>Müşteri</th>
+            <th>Teslimat Adresi</th>
+            <th>Fatura Adresi</th>
+            <th>Tarih</th>
+            <th>Toplam Tutar</th>
+            <th>Vergi</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders(); track order.orderId) {
+            <tr>
+              <td>{{ order.orderId }}</td>
+              <td>{{ order.orderNo }}</td>
+              <td>{{ order.customer?.customerName || 'Bilinmiyor' }}</td>
+              <td>
+                @if (order.deliveryAddress) {
+                  <div style="font-size: 0.9em;">
+                    {{ order.deliveryAddress.address }}<br>
+                    <span style="color: #666;">{{ order.deliveryAddress.city }} / {{ order.deliveryAddress.country }}</span>
+                  </div>
+                } @else {
+                  <span style="color: #999;">-</span>
+                }
+              </td>
+              <td>
+                @if (order.invoiceAddress) {
+                  <div style="font-size: 0.9em;">
+                    {{ order.invoiceAddress.address }}<br>
+                    <span style="color: #666;">{{ order.invoiceAddress.city }} / {{ order.invoiceAddress.country }}</span>
+                  </div>
+                } @else {
+                  <span style="color: #999;">-</span>
+                }
+              </td>
+              <td>{{ order.orderDate | date:'dd.MM.yyyy' }}</td>
+              <td>{{ order.totalPrice | number:'1.2-2' }} ₺</td>
+              <td>{{ order.tax | number:'1.2-2' }} ₺</td>
+              <td>
+                <span [style.color]="order.isActive ? '#28a745' : '#6c757d'">
+                  {{ order.isActive ? '✓ Aktif' : '✗ Pasif' }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/orders/edit', order.orderId]" class="btn btn-primary" style="margin-right: 8px;">✏️ Düzenle</a>
+                <button (click)="deleteOrder(order.orderId)" class="btn btn-danger">🗑️ Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

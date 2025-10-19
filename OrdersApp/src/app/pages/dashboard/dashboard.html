@@ -1,0 +1,261 @@
+<div class="dashboard">
+  <div class="page-header">
+    <h1>📊 Ana Sayfa</h1>
+    <p class="subtitle">Sipariş Yönetim Sistemine Hoş Geldiniz</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon customers">👥</div>
+      <div class="stat-content">
+        <h3>Toplam Müşteri</h3>
+        <p class="stat-number">{{ statistics().totalCustomers }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stocks">📦</div>
+      <div class="stat-content">
+        <h3>Stok Kalemleri</h3>
+        <p class="stat-number">{{ statistics().totalStocks }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon orders">🛒</div>
+      <div class="stat-content">
+        <h3>Toplam Sipariş</h3>
+        <p class="stat-number">{{ statistics().totalOrders }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon revenue">💰</div>
+      <div class="stat-content">
+        <h3>Toplam Ciro</h3>
+        <p class="stat-number">{{ statistics().totalRevenue | number:'1.2-2' }} ₺</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h2>📊 Raporlar ve Sorgular</h2>
+    <div class="actions-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+      
+      <!-- 1. Ürünü alan müşteriler -->
+      <div class="action-card" style="cursor: default; flex-direction: column; align-items: stretch;">
+        <div class="action-icon">🔍</div>
+        <h3>Ürüne Göre Müşteriler</h3>
+        <p style="margin-bottom: 12px;">Seçilen ürünü alan müşterilerin listesi</p>
+        <select 
+          class="form-control" 
+          [value]="selectedStockId()"
+          (change)="selectedStockId.set(parseInt($any($event.target).value))"
+          style="margin-bottom: 8px;"
+        >
+          <option value="0">Ürün seçin...</option>
+          @for (stock of stocks(); track stock.stockId) {
+            <option [value]="stock.stockId">{{ stock.stockName }}</option>
+          }
+        </select>
+        <button class="btn btn-primary" (click)="getCustomersByStock()" [disabled]="loading()">
+          {{ loading() ? 'Yükleniyor...' : 'Rapor Oluştur' }}
+        </button>
+      </div>
+
+      <!-- 2. Çoklu ürün alan müşteriler -->
+      <div class="action-card" style="cursor: pointer;" (click)="getCustomersWithMultipleItems()">
+        <div class="action-icon">📈</div>
+        <h3>Çoklu Ürün Siparişleri</h3>
+        <p>Siparişteki ürün miktarı 1'den fazla olan müşteriler</p>
+      </div>
+
+      <!-- 3. Farklı adresli müşteriler -->
+      <div class="action-card" style="cursor: pointer;" (click)="getCustomersDifferentAddresses()">
+        <div class="action-icon">🏠</div>
+        <h3>Farklı Adresli Müşteriler</h3>
+        <p>Fatura ve teslimat adresi farklı olan müşteriler</p>
+      </div>
+
+      <!-- 4. Müşteri adına göre siparişler -->
+      <div class="action-card" style="cursor: default; flex-direction: column; align-items: stretch;">
+        <div class="action-icon">�</div>
+        <h3>Müşteriye Göre Siparişler</h3>
+        <p style="margin-bottom: 12px;">Müşteri adına göre sipariş listesi</p>
+        <input 
+          type="text" 
+          class="form-control" 
+          [value]="customerNameSearch()"
+          (input)="customerNameSearch.set($any($event.target).value)"
+          placeholder="Müşteri adı (örn: TLS)"
+          style="margin-bottom: 8px;"
+        />
+        <button class="btn btn-primary" (click)="getOrdersByCustomerName()" [disabled]="loading()">
+          {{ loading() ? 'Yükleniyor...' : 'Rapor Oluştur' }}
+        </button>
+      </div>
+
+      <!-- 5. Şehre göre sipariş sayısı -->
+      <div class="action-card" style="cursor: default; flex-direction: column; align-items: stretch;">
+        <div class="action-icon">🌆</div>
+        <h3>Şehre Göre Sipariş Sayısı</h3>
+        <p style="margin-bottom: 12px;">Belirli bir şehirdeki toplam sipariş sayısı</p>
+        <input 
+          type="text" 
+          class="form-control" 
+          [value]="citySearch()"
+          (input)="citySearch.set($any($event.target).value)"
+          placeholder="Şehir adı (örn: İstanbul)"
+          style="margin-bottom: 8px;"
+        />
+        <button class="btn btn-primary" (click)="getOrderCountByCity()" [disabled]="loading()">
+          {{ loading() ? 'Yükleniyor...' : 'Rapor Oluştur' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Rapor Sonuçları Modal -->
+  @if (reportData()) {
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
+      <div style="background: white; border-radius: 12px; max-width: 900px; max-height: 80vh; overflow: auto; padding: 24px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0;">� Rapor Sonuçları</h2>
+          <button class="btn btn-secondary" (click)="closeReport()">❌ Kapat</button>
+        </div>
+
+        <!-- Ürüne göre müşteriler -->
+        @if (reportType() === 'customersByStock') {
+          @if (reportData().length === 0) {
+            <p class="empty-state">Bu ürünü alan müşteri bulunmamaktadır.</p>
+          } @else {
+            @for (customer of reportData(); track customer.customerId) {
+              <div style="padding: 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px;">
+                <h3 style="margin: 0 0 12px 0;">{{ customer.customerName }}</h3>
+                @if (customer.addresses.length > 0) {
+                  <div style="margin-left: 16px;">
+                    @for (address of customer.addresses; track address.addressId) {
+                      <div style="margin-bottom: 8px;">
+                        <strong>{{ address.addressType }}:</strong> {{ address.address }}, {{ address.town }}, {{ address.city }}, {{ address.country }}
+                        <br><small>📧 {{ address.email }} | 📞 {{ address.phone }}</small>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p style="margin-left: 16px; color: #6c757d;">Adres bilgisi bulunmamaktadır.</p>
+                }
+              </div>
+            }
+          }
+        }
+
+        <!-- Çoklu ürün siparişleri -->
+        @if (reportType() === 'multipleItems') {
+          @if (reportData().length === 0) {
+            <p class="empty-state">Birden fazla ürün içeren sipariş bulunmamaktadır.</p>
+          } @else {
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Müşteri</th>
+                  <th>Sipariş No</th>
+                  <th>Ürün</th>
+                  <th>Miktar</th>
+                  <th>Tarih</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of reportData(); track item.orderId + '-' + item.customerId) {
+                  <tr>
+                    <td>{{ item.customerName }}</td>
+                    <td>{{ item.orderNo }}</td>
+                    <td>{{ item.stockName }}</td>
+                    <td><strong>{{ item.amount }}</strong></td>
+                    <td>{{ item.orderDate | date:'dd.MM.yyyy' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        }
+
+        <!-- Farklı adresli müşteriler -->
+        @if (reportType() === 'differentAddresses') {
+          @if (reportData().length === 0) {
+            <p class="empty-state">Farklı teslimat ve fatura adresi olan müşteri bulunmamaktadır.</p>
+          } @else {
+            @for (customer of reportData(); track customer.customerId + '-' + customer.orderId) {
+              <div style="padding: 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px;">
+                <h3 style="margin: 0 0 12px 0;">{{ customer.customerName }} - {{ customer.orderNo }}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div>
+                    <strong>📦 Teslimat Adresi:</strong><br>
+                    {{ customer.deliveryAddress.address }}, {{ customer.deliveryAddress.town }}, {{ customer.deliveryAddress.city }}
+                  </div>
+                  <div>
+                    <strong>🧾 Fatura Adresi:</strong><br>
+                    {{ customer.invoiceAddress.address }}, {{ customer.invoiceAddress.town }}, {{ customer.invoiceAddress.city }}
+                  </div>
+                </div>
+              </div>
+            }
+          }
+        }
+
+        <!-- Müşteriye göre siparişler -->
+        @if (reportType() === 'ordersByCustomer') {
+          @if (reportData().length === 0) {
+            <p class="empty-state">Bu müşteriye ait sipariş bulunmamaktadır.</p>
+          } @else {
+            @for (order of reportData(); track order.orderId) {
+              <div style="padding: 16px; background: #f8f9fa; border-radius: 8px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                  <div>
+                    <h3 style="margin: 0;">{{ order.orderNo }}</h3>
+                    <small>{{ order.orderDate | date:'dd.MM.yyyy' }}</small>
+                  </div>
+                  <div style="text-align: right;">
+                    <strong>{{ order.totalPrice | number:'1.2-2' }} ₺</strong><br>
+                    <small>Vergi: {{ order.tax | number:'1.2-2' }} ₺</small>
+                  </div>
+                </div>
+                @if (order.orderDetails.length > 0) {
+                  <table style="width: 100%; font-size: 14px;">
+                    <thead>
+                      <tr style="background: #dee2e6;">
+                        <th style="padding: 8px;">Ürün</th>
+                        <th style="padding: 8px; text-align: right;">Miktar</th>
+                        <th style="padding: 8px; text-align: right;">Fiyat</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (detail of order.orderDetails; track detail.orderDetailId) {
+                        <tr>
+                          <td style="padding: 8px;">{{ detail.stockName }}</td>
+                          <td style="padding: 8px; text-align: right;">{{ detail.amount }}</td>
+                          <td style="padding: 8px; text-align: right;">{{ detail.price | number:'1.2-2' }} ₺</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </div>
+            }
+          }
+        }
+
+        <!-- Şehre göre sipariş sayısı -->
+        @if (reportType() === 'ordersByCity') {
+          <div style="text-align: center; padding: 40px;">
+            <h1 style="font-size: 72px; margin: 0; color: #667eea;">{{ reportData().orderCount }}</h1>
+            <p style="font-size: 24px; margin-top: 16px;">
+              <strong>{{ reportData().city }}</strong> şehrinde toplam sipariş sayısı
+            </p>
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,90 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ stockId ? '✏️ Stok Düzenle' : '➕ Yeni Stok' }}</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else {
+    <div class="card">
+      @if (error()) {
+        <div style="padding: 12px; background: #f8d7da; color: #721c24; border-radius: 6px; margin-bottom: 20px;">
+          {{ error() }}
+        </div>
+      }
+
+      <form (submit)="save($event)">
+        <div class="form-group">
+          <label>Stok Adı *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [value]="stockName()"
+            (input)="stockName.set($any($event.target).value)"
+            placeholder="Stok adını girin"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Birim *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [value]="unit()"
+            (input)="unit.set($any($event.target).value)"
+            placeholder="Örn: Adet, Kg, Lt"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Fiyat *</label>
+          <input 
+            type="number" 
+            step="0.01"
+            class="form-control" 
+            [value]="price()"
+            (input)="price.set(parseFloat($any($event.target).value) || 0)"
+            placeholder="0.00"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Barkod</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [value]="barcode()"
+            (input)="barcode.set($any($event.target).value)"
+            placeholder="Barkod numarası"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input 
+              type="checkbox" 
+              [checked]="isActive()"
+              (change)="isActive.set($any($event.target).checked)"
+              style="margin-right: 8px;"
+            />
+            Aktif
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" [disabled]="loading()">
+            💾 Kaydet
+          </button>
+          <button type="button" class="btn btn-secondary" routerLink="/stocks">
+            ❌ İptal
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

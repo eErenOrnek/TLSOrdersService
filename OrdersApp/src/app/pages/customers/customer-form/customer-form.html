@@ -1,0 +1,54 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ customerId ? '✏️ Müşteri Düzenle' : '➕ Yeni Müşteri' }}</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else {
+    <div class="card">
+      @if (error()) {
+        <div style="padding: 12px; background: #f8d7da; color: #721c24; border-radius: 6px; margin-bottom: 20px;">
+          {{ error() }}
+        </div>
+      }
+
+      <form (submit)="save($event)">
+        <div class="form-group">
+          <label>Müşteri Adı *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [value]="customerName()"
+            (input)="customerName.set($any($event.target).value)"
+            placeholder="Müşteri adını girin"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input 
+              type="checkbox" 
+              [checked]="isActive()"
+              (change)="isActive.set($any($event.target).checked)"
+              style="margin-right: 8px;"
+            />
+            Aktif
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success" [disabled]="loading()">
+            💾 Kaydet
+          </button>
+          <button type="button" class="btn btn-secondary" routerLink="/customers">
+            ❌ İptal
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

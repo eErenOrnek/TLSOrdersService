@@ -1,0 +1,40 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.log
+.vs/
+
+# Entity Framework
+Migrations/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+build/
+*.dll
+*.exe
+*.pdb
+
+# Angular
+.angular/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+appsettings.Development.json
+appsettings.json
+
+# IDEs
+.idea/
+*.swp
+*.swo
+*~

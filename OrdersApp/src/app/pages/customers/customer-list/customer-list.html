@@ -1,0 +1,56 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>👥 Müşteriler</h1>
+    <button class="btn btn-primary" routerLink="/customers/new">
+      ➕ Yeni Müşteri
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card">
+      <div class="empty-state">Yükleniyor...</div>
+    </div>
+  } @else if (error()) {
+    <div class="card">
+      <div class="empty-state" style="color: #dc3545;">{{ error() }}</div>
+      <div style="text-align: center; margin-top: 16px;">
+        <button (click)="loadCustomers()" class="btn btn-primary">🔄 Tekrar Dene</button>
+      </div>
+    </div>
+  } @else if (customers().length === 0) {
+    <div class="card">
+      <p class="empty-state">Henüz müşteri kaydı bulunmamaktadır.</p>
+      <p class="empty-hint">Yeni müşteri eklemek için yukarıdaki "Yeni Müşteri" butonuna tıklayın.</p>
+    </div>
+  } @else {
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Müşteri Adı</th>
+            <th>Durum</th>
+            <th>İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (customer of customers(); track customer.customerId) {
+            <tr>
+              <td>{{ customer.customerId }}</td>
+              <td>{{ customer.customerName }}</td>
+              <td>
+                <span [style.color]="customer.isActive ? '#28a745' : '#6c757d'">
+                  {{ customer.isActive ? '✓ Aktif' : '✗ Pasif' }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/customers/edit', customer.customerId]" class="btn btn-primary" style="margin-right: 8px;">✏️ Düzenle</a>
+                <button (click)="deleteCustomer(customer.customerId)" class="btn btn-danger">🗑️ Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
