@@ -1,7 +1,3 @@
-# Orders Management System
-
-Sipariş yönetim sistemi. Backend .NET 8 Web API, frontend Angular 20 ile geliştirildi.
-
 ## Kurulum
 
 Projeyi klonladıktan sonra aşağıdaki adımları takip edin.
